@@ -1,0 +1,77 @@
+## Processing Axis CC XLXS
+- Statements are in XLXS format
+- Raw excel nees to be parsed properly and structured
+- structured extracted data from pandas dataframe to CSV
+
+```
+import pandas as pd
+
+x_file = "cc_axis_202606.xlsx"
+def process_axis_cc_raw(x_file):
+    df = pd.read_excel(x_file, sheet_name='Transactions Summary', header=6)
+    
+    # Rename columns
+    df = df.rename(columns={'Date': 'trans_dt', 'Transaction Details': 'trans_details', 'Amount (INR)': 'trans_amt', 'Debit/Credit': 'trans_type'})
+    
+    # Select useful columns
+    df_final = df[['trans_dt', 'trans_details', 'trans_amt', 'trans_type']]
+
+    # Standardize amount field - remove symbol and commas
+    df['trans_amt'] = df['trans_amt'].str.replace('₹ ', '', regex=False).str.replace(',', '', regex=False).astype('float')
+    
+    # Standardize date field
+    df['trans_dt'] = pd.to_datetime(df['Date'], format="%d %b '%y", errors='coerce')
+
+    # Filer out bad rows
+    df = df.dropna(subset=['trans_dt'])
+
+    return df
+```
+- It needs openpyxl
+
+## Processing ICICI CC PDF
+- Raw data are in PDF files
+- Each PDF file has tablular format we can use tabula-py
+- Extract tables from all pages of PDF as single dataframe
+- Standardize columns, drop wrong rows etc
+
+```
+import tabula
+import pandas as pd
+import numpy as np
+
+x_file = 'cc_icici_2025_2026.pdf'
+def process_icici_cc_raw(x_file):
+
+    # Read tables from all PDF pages into single dataframe
+    dfs = tabula.read_pdf(
+        x_file,
+        pages="all", 
+        multiple_tables=False,
+        pandas_options={'skiprows': 1}
+    )
+    df = dfs[0]
+
+    # Rename columns
+    df = df.rename(columns={'Date': 'trans_dt', 'Ref. Number': 'ref_num', 'Transaction Details': 'trans_details', 'Amount(in ` )': 'trans_amt'})
+    
+    # Select useful columns
+    df = df[['trans_dt', 'ref_num', 'trans_details', 'trans_amt']]
+    
+    # Standardize date field
+    df['trans_dt'] = pd.to_datetime(df['trans_dt'], format="%d-%b-%y", errors='coerce')
+
+    # Filer out bad rows
+    df = df.dropna(subset=['trans_dt'])
+
+    # Standardize amount field - remove symbol and commas
+    df['trans_amt'] = df['trans_amt'].str.replace('₹ ', '', regex=False).str.replace(',', '', regex=False).astype('float')
+
+    # If amount negative then trans_type 'Credit' else 'Debit'
+    df['trans_type'] = np.where(df['trans_amt'] < 0, 'Credit', 'Debit')
+
+    # Change trans_amt to absolute value
+    df['trans_amt'] = np.abs(df['trans_amt'])    
+
+    return df
+```

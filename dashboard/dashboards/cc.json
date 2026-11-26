@@ -1,0 +1,1385 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 2,
+  "graphTooltip": 1,
+  "id": 4,
+  "links": [
+    {
+      "asDropdown": false,
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Account dashboard",
+      "tooltip": "Open account spending dashboard",
+      "type": "link",
+      "url": "/d/expenses-tracker-account"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Share of credit-card transactions by debit or credit type.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Purchases"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#5794F2",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Payments / credits"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#B877D9",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": false,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "WITH f AS (SELECT trans_type FROM expenses.main.cc_categorized WHERE trans_type IN ('debit','credit') AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE)) SELECT COALESCE(100.0*COUNT(*) FILTER(WHERE trans_type='debit')/NULLIF(COUNT(*),0),0) AS \"Purchases\", COALESCE(100.0*COUNT(*) FILTER(WHERE trans_type='credit')/NULLIF(COUNT(*),0),0) AS \"Payments / credits\" FROM f",
+          "refId": "A"
+        }
+      ],
+      "title": "Transaction Mix",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Purchase spending and payments or credits as a share of matching transaction value.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Purchase spend"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#5794F2",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Payments / credits"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#B877D9",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "WITH f AS (SELECT trans_type,trans_amt FROM expenses.main.cc_categorized WHERE trans_type IN ('debit','credit') AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE)) SELECT COALESCE(100.0*SUM(trans_amt) FILTER(WHERE trans_type='debit')/NULLIF(SUM(trans_amt),0),0) AS \"Purchase spend\", COALESCE(100.0*SUM(trans_amt) FILTER(WHERE trans_type='credit')/NULLIF(SUM(trans_amt),0),0) AS \"Payments / credits\" FROM f",
+          "refId": "A"
+        }
+      ],
+      "title": "Amount Mix",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Net card outflow as a share of purchase spending. Lower values can reflect repayments and refunds; this is not a bank-account savings rate.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": false,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(100.0*(SUM(trans_amt) FILTER(WHERE trans_type='debit')-SUM(trans_amt) FILTER(WHERE trans_type='credit'))/NULLIF(SUM(trans_amt) FILTER(WHERE trans_type='debit'),0),0) AS \"Net card outflow\" FROM expenses.main.cc_categorized WHERE trans_type IN ('debit','credit') AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE)",
+          "refId": "A"
+        }
+      ],
+      "title": "Net Card Outflow",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Daily purchase spending split by card issuer.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 1,
+            "drawStyle": "bars",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "always",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "currencyINR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 0,
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(trans_dt AS TIMESTAMP) AS time, SUM(trans_amt) FILTER (WHERE trans_mode='cc_axis') AS \"Axis\", SUM(trans_amt) FILTER (WHERE trans_mode='cc_icici') AS \"ICICI\" FROM expenses.main.cc_categorized WHERE trans_type='debit' AND trans_mode IN ('cc_axis','cc_icici') AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE) GROUP BY 1 ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Spend by Card Issuer",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Monthly purchase spending split by card issuer.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "currencyINR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 0,
+          "rawQuery": true,
+          "rawSql": "SELECT CAST(DATE_TRUNC('month',trans_dt) AS TIMESTAMP) AS time, SUM(trans_amt) FILTER (WHERE trans_mode='cc_axis') AS \"Axis\", SUM(trans_amt) FILTER (WHERE trans_mode='cc_icici') AS \"ICICI\" FROM expenses.main.cc_categorized WHERE trans_type='debit' AND trans_mode IN ('cc_axis','cc_icici') AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE) GROUP BY 1 ORDER BY 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Monthly Spend by Card Issuer",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Card spending by category and subcategory.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "currencyINR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 6,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "xField": "category",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(category,'Uncategorized') AS category, SUM(trans_amt) AS \"Purchase spend\" FROM expenses.main.cc_categorized WHERE trans_type='debit' AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE) GROUP BY 1 ORDER BY 2 DESC LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Purchase Spend by Category",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Credit-card purchases by issuer / payment mode.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "id": 7,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "SELECT UPPER(REPLACE(trans_mode,'cc_','')) AS issuer, SUM(trans_amt) AS \"Purchase spend\" FROM expenses.main.cc_categorized WHERE trans_type='debit' AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE) GROUP BY 1 ORDER BY 2 DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Spend by Card Issuer",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Largest card merchants by purchase amount.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "currencyINR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 38
+      },
+      "id": 8,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "xField": "merchant",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(NULLIF(TRIM(normalized_trans_src),''),'Unmatched') AS merchant, SUM(trans_amt) AS \"Purchase spend\" FROM expenses.main.cc_categorized WHERE trans_type='debit' AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE) GROUP BY 1 ORDER BY 2 DESC LIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Merchants by Spend",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Purchase distribution across transaction amount bands.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 38
+      },
+      "id": 9,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "horizontal",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xField": "amount_band",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "WITH f AS (SELECT trans_amt FROM expenses.main.cc_categorized WHERE trans_type='debit' AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE)) SELECT CASE WHEN trans_amt<500 THEN '₹0–499' WHEN trans_amt<2000 THEN '₹500–1,999' WHEN trans_amt<5000 THEN '₹2,000–4,999' WHEN trans_amt<10000 THEN '₹5,000–9,999' WHEN trans_amt<25000 THEN '₹10,000–24,999' ELSE '₹25,000+' END AS amount_band, COUNT(*) AS transactions FROM f GROUP BY 1 ORDER BY MIN(trans_amt)",
+          "refId": "A"
+        }
+      ],
+      "title": "Purchase Count by Amount Band",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Latest credit-card transactions matching the selected filters.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "amount"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyINR"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 24,
+        "x": 0,
+        "y": 50
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "md",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "SELECT trans_dt AS date, UPPER(REPLACE(trans_mode,'cc_','')) AS issuer, normalized_trans_src AS merchant, category, subcategory, trans_type AS transaction_type, trans_amt AS amount, particulars FROM expenses.main.cc_categorized WHERE trans_type IN ('debit','credit') AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE) ORDER BY trans_dt DESC LIMIT 500",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Credit-Card Transactions",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Transactions grouped by merchant across at least three different months; a heuristic recurring-spend signal, not a subscription guarantee.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "right",
+            "cellOptions": {
+              "type": "auto",
+              "wrapText": false
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total_spend"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyINR"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "average_transaction"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyINR"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 65
+      },
+      "id": 11,
+      "options": {
+        "cellHeight": "md",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "active_months"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "SELECT normalized_trans_src AS merchant, COUNT(DISTINCT DATE_TRUNC('month',trans_dt)) AS active_months, COUNT(*) AS purchase_count, ROUND(SUM(trans_amt),2) AS total_spend, ROUND(AVG(trans_amt),2) AS average_transaction, MIN(trans_dt) AS first_seen, MAX(trans_dt) AS last_seen FROM expenses.main.cc_categorized WHERE trans_type='debit' AND normalized_trans_src IS NOT NULL AND TRIM(normalized_trans_src)<>'' AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE) GROUP BY normalized_trans_src HAVING COUNT(DISTINCT DATE_TRUNC('month',trans_dt))>=3 ORDER BY active_months DESC,total_spend DESC LIMIT 50",
+          "refId": "A"
+        }
+      ],
+      "title": "Recurring Merchant Trends",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Counts and sums transactions with missing categories or merchant normalization.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "right",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 77
+      },
+      "id": 12,
+      "options": {
+        "cellHeight": "md",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS total_transactions, COUNT(*) FILTER(WHERE category IS NULL OR TRIM(category)='') AS uncategorized, COUNT(*) FILTER(WHERE normalized_trans_src IS NULL OR TRIM(normalized_trans_src)='') AS unmatched_sources, COUNT(*) FILTER(WHERE trans_type='debit') AS purchases, COUNT(*) FILTER(WHERE trans_type='credit') AS payments_credits, ROUND(SUM(trans_amt) FILTER(WHERE trans_type='debit'),2) AS purchase_amount, ROUND(SUM(trans_amt) FILTER(WHERE trans_type='credit'),2) AS credit_amount FROM expenses.main.cc_categorized WHERE trans_type IN ('debit','credit') AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE)",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Quality & Coverage",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Purchase totals by month compared with the optional monthly card-spend budget.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "right",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "actual_spend"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyINR"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "monthly_budget"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyINR"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "variance"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyINR"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "variance_percent"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 85
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "md",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "month"
+          }
+        ]
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "WITH monthly AS (SELECT DATE_TRUNC('month',trans_dt) AS month,SUM(trans_amt) AS actual_spend FROM expenses.main.cc_categorized WHERE trans_type='debit' AND $__timeFilter(trans_dt) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE) GROUP BY 1), budget AS (SELECT TRY_CAST(${monthly_budget} AS DOUBLE) AS amount) SELECT STRFTIME(month,'%Y-%m') AS month,ROUND(actual_spend,2) AS actual_spend,CASE WHEN amount>0 THEN ROUND(amount,2) END AS monthly_budget,CASE WHEN amount>0 THEN ROUND(actual_spend-amount,2) END AS variance,CASE WHEN amount>0 THEN ROUND(100.0*(actual_spend-amount)/NULLIF(amount,0),1) END AS variance_percent FROM monthly CROSS JOIN budget ORDER BY month DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Monthly Card Budget vs Actual",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "motherduck-duckdb-datasource",
+        "uid": "expenses-duckdb"
+      },
+      "description": "Purchase totals for a selected calendar year compared with the previous year.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "currencyINR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 95
+      },
+      "id": 14,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "vertical",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "month",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "format": 1,
+          "rawQuery": true,
+          "rawSql": "WITH sel AS (SELECT TRY_CAST(${yoy_year:raw} AS INTEGER) AS yr), f AS (SELECT trans_dt,trans_amt FROM expenses.main.cc_categorized CROSS JOIN sel WHERE trans_type='debit' AND YEAR(trans_dt) IN (sel.yr,sel.yr-1) AND ('${trans_mode:raw}'='NULL' OR trans_mode IN (${trans_mode:sqlstring})) AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) AND ('${subcategory:raw}'='NULL' OR subcategory IN (${subcategory:sqlstring})) AND ('${entity:raw}'='NULL' OR normalized_trans_src IN (${entity:sqlstring})) AND trans_amt BETWEEN TRY_CAST(${min_amount} AS DOUBLE) AND TRY_CAST(${max_amount} AS DOUBLE)) SELECT STRFTIME(MAKE_DATE(2000,MONTH(trans_dt),1),'%b') AS month,SUM(trans_amt) FILTER(WHERE YEAR(trans_dt)=sel.yr) AS \"Selected year\",SUM(trans_amt) FILTER(WHERE YEAR(trans_dt)=sel.yr-1) AS \"Prior year\" FROM f CROSS JOIN sel GROUP BY MONTH(trans_dt) ORDER BY MONTH(trans_dt)",
+          "refId": "A"
+        }
+      ],
+      "title": "Year-over-Year Monthly Purchases",
+      "type": "barchart"
+    }
+  ],
+  "preload": true,
+  "refresh": "5m",
+  "schemaVersion": 41,
+  "tags": [
+    "expenses",
+    "duckdb",
+    "personal-finance",
+    "credit-card"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": "NULL",
+        "current": {
+          "text": "All",
+          "value": "NULL"
+        },
+        "datasource": {
+          "type": "motherduck-duckdb-datasource",
+          "uid": "expenses-duckdb"
+        },
+        "definition": "SELECT DISTINCT trans_mode AS __text, trans_mode AS __value FROM expenses.main.cc_categorized WHERE trans_mode IS NOT NULL ORDER BY 1",
+        "includeAll": true,
+        "label": "Card issuer",
+        "multi": true,
+        "name": "trans_mode",
+        "options": [],
+        "query": "SELECT DISTINCT trans_mode AS __text, trans_mode AS __value FROM expenses.main.cc_categorized WHERE trans_mode IS NOT NULL ORDER BY 1",
+        "refresh": 1,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": "NULL",
+        "current": {
+          "text": "All",
+          "value": "NULL"
+        },
+        "datasource": {
+          "type": "motherduck-duckdb-datasource",
+          "uid": "expenses-duckdb"
+        },
+        "definition": "SELECT DISTINCT category AS __text, category AS __value FROM expenses.main.cc_categorized WHERE category IS NOT NULL ORDER BY 1",
+        "includeAll": true,
+        "label": "Category",
+        "multi": true,
+        "name": "category",
+        "options": [],
+        "query": "SELECT DISTINCT category AS __text, category AS __value FROM expenses.main.cc_categorized WHERE category IS NOT NULL ORDER BY 1",
+        "refresh": 1,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": "NULL",
+        "current": {
+          "text": "All",
+          "value": "NULL"
+        },
+        "datasource": {
+          "type": "motherduck-duckdb-datasource",
+          "uid": "expenses-duckdb"
+        },
+        "definition": "SELECT DISTINCT subcategory AS __text, subcategory AS __value FROM expenses.main.cc_categorized WHERE subcategory IS NOT NULL AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) ORDER BY 1",
+        "includeAll": true,
+        "label": "Subcategory",
+        "multi": true,
+        "name": "subcategory",
+        "options": [],
+        "query": "SELECT DISTINCT subcategory AS __text, subcategory AS __value FROM expenses.main.cc_categorized WHERE subcategory IS NOT NULL AND ('${category:raw}'='NULL' OR category IN (${category:sqlstring})) ORDER BY 1",
+        "refresh": 1,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": "NULL",
+        "current": {
+          "text": "All",
+          "value": "NULL"
+        },
+        "datasource": {
+          "type": "motherduck-duckdb-datasource",
+          "uid": "expenses-duckdb"
+        },
+        "definition": "SELECT DISTINCT normalized_trans_src AS __text, normalized_trans_src AS __value FROM expenses.main.cc_categorized WHERE normalized_trans_src IS NOT NULL AND TRIM(normalized_trans_src)<>'' ORDER BY 1",
+        "includeAll": true,
+        "label": "Merchant / source",
+        "multi": true,
+        "name": "entity",
+        "options": [],
+        "query": "SELECT DISTINCT normalized_trans_src AS __text, normalized_trans_src AS __value FROM expenses.main.cc_categorized WHERE normalized_trans_src IS NOT NULL AND TRIM(normalized_trans_src)<>'' ORDER BY 1",
+        "refresh": 1,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "2026",
+          "value": "2026"
+        },
+        "datasource": {
+          "type": "motherduck-duckdb-datasource",
+          "uid": "expenses-duckdb"
+        },
+        "definition": "SELECT DISTINCT CAST(YEAR(trans_dt) AS VARCHAR) AS __text, CAST(YEAR(trans_dt) AS VARCHAR) AS __value FROM expenses.main.cc_categorized WHERE trans_dt IS NOT NULL ORDER BY 1 DESC",
+        "label": "Comparison year",
+        "name": "yoy_year",
+        "options": [],
+        "query": "SELECT DISTINCT CAST(YEAR(trans_dt) AS VARCHAR) AS __text, CAST(YEAR(trans_dt) AS VARCHAR) AS __value FROM expenses.main.cc_categorized WHERE trans_dt IS NOT NULL ORDER BY 1 DESC",
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "0",
+          "value": "0"
+        },
+        "label": "Minimum amount (₹)",
+        "name": "min_amount",
+        "query": "0",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "1000000000",
+          "value": "1000000000"
+        },
+        "label": "Maximum amount (₹)",
+        "name": "max_amount",
+        "query": "1000000000",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "0",
+          "value": "0"
+        },
+        "label": "Monthly card budget (₹)",
+        "name": "monthly_budget",
+        "query": "10000",
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1y",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "1d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Expenses Tracker — Credit Card Overview",
+  "uid": "expenses-tracker-creditcard",
+  "version": 10,
+  "weekStart": "monday"
+}

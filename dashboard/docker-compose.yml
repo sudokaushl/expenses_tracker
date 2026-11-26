@@ -1,0 +1,26 @@
+services:
+  grafana:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: expenses-tracker-grafana
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: motherduck-duckdb-datasource
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - "${delta_dir:?Set delta_dir in the project .env}/schema/expenses.db:/data/expenses.db:ro"
+      - ./provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards:/var/lib/grafana/dashboards:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  grafana-data:

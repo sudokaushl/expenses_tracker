@@ -1,0 +1,49 @@
+# Setup (once): installs the CLI plus credit card extraction deps (openpyxl, tabula-py; tabula needs Java)
+uv pip install -e ".[all,statements]"
+
+# Every command takes --statement account|creditcard (default: account) and works on that
+# statement type's own tables: acc_* for account, cc_* for creditcard.
+# Canonicalization artifacts are trained from account labels and shared; prediction uses each statement's own labels.
+# Use --mode historical to rebuild a stage, --mode incremental (default) to append new rows.
+
+# ---- Account statements (Axis CSVs in landing_zone/statements/acc/axis) ----
+# Run these commands from the repository root.
+uv run expenses-tracker ingest --statement account --mode historical   # --bank axis is the default
+uv run expenses-tracker tokenize --statement account --mode historical
+uv run expenses-tracker canonicalize --statement account               # trains on acc_labelled labels, then normalizes
+uv run expenses-tracker predict --statement account                    # add --llm for the local LLM; --skip-eval to skip CV
+uv run expenses-tracker embed --statement account
+
+# ---- Credit card statements (landing_zone/statements/cc/{axis,icici}/raw) ----
+uv run expenses-tracker extract --statement creditcard --bank axis     # xlsx -> <bank>/csv
+uv run expenses-tracker extract --statement creditcard --bank icici    # pdf  -> <bank>/csv
+uv run expenses-tracker ingest --statement creditcard --mode historical            # --bank axis|icici|all (default all)
+uv run expenses-tracker tokenize --statement creditcard --mode historical
+uv run expenses-tracker canonicalize --statement creditcard            # normalizes only; mappings come from account data
+uv run expenses-tracker predict --statement creditcard                 # trains on cc_labelled rows
+uv run expenses-tracker embed --statement creditcard
+
+# New statements later: same commands without --mode historical (incremental).
+
+# Tables: {acc|cc}_raw, _curated, _tokenized, _normalized, _categorized
+# Chroma collections: {acc|cc}_transactions, {acc|cc}_transaction_tokens
+
+# Legacy per-module scripts (account only):
+#   python process_input_data.py -i hist | python tokenization.py -i hist | python canonicalizer.py
+
+
+
+
+
+# -------- Cleand and save amazon_transactions
+create temporary table amazon_transactions as 
+select date(date) as trans_dt, 
+amount as trans_amt, 
+status as trans_status, 
+type as trans_type, 
+authenticator as particulars, 
+authenticatorTwo as trans_mode, 
+transactionDetailPageURL as trans_url 
+from read_csv('*.csv', header=true, delim=',');
+
+COPY amazon_transactions TO 'amazon_transactions_cleaned.csv' (FORMAT CSV, HEADER true, DELIMITER '|');

@@ -1,0 +1,25 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Local secrets and financial data
+.env
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+*.csv
+/amazon_pay_responses/
+
+# Generated outputs
+/artifacts/
+/logs/
+/private_config/
+/config.ini
